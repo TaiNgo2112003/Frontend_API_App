@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "http://localhost:8080/tasks";
+const API_URL = "https://backendapiapp-production.up.railway.app/tasks";
 
 function App() {
   const [tasks, setTasks] = useState([]);
