@@ -1,50 +1,48 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
+import Header from "./components/Header/Header"; 
+import TaskList from "./components/Container/TaskList"; 
+import TaskForm from "./components/Container/TaskForm"; 
 
-const API_URL = "https://backendapiapp-production.up.railway.app/tasks";
+const API_URL = "http://localhost:8080/tasks";
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  // Lấy danh sách công việc từ API
   useEffect(() => {
     fetchTasks();
   }, []);
 
+  // Get Task
   const fetchTasks = async () => {
     try {
       const response = await axios.get(API_URL);
-
-      // Kiểm tra dữ liệu API trước khi cập nhật state
       if (response.data && Array.isArray(response.data)) {
         setTasks(response.data);
       } else {
         console.error("Lỗi: API không trả về mảng hợp lệ", response.data);
-        setTasks([]); // Để tránh lỗi khi render
+        setTasks([]); 
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách công việc:", error);
-      setTasks([]); // Nếu API lỗi, tránh lỗi khi render
+      setTasks([]); 
     }
   };
 
-  // Thêm công việc mới
+  // Add Task
   const addTask = async () => {
-    if (!title.trim()) {
-      alert("Tiêu đề không được để trống!");
+    if (!title.trim() || !description.trim()) {
+      alert("Tiêu đề và mô tả task không được để trống!");
       return;
     }
-
     try {
       const response = await axios.post(API_URL, { title, description });
-
-      // Kiểm tra API phản hồi hợp lệ
       if (response.data && response.data.id) {
         setTasks([...tasks, response.data]);
-        setTitle("");
+        setTitle(""); 
         setDescription("");
       } else {
         console.error("Lỗi: API trả về dữ liệu không hợp lệ", response.data);
@@ -54,79 +52,51 @@ function App() {
     }
   };
 
-  // Cập nhật trạng thái hoàn thành
-  const toggleTaskCompletion = async (id, completed, title) => {
+  // Update Task
+  const toggleTaskCompletion = async (id, completed) => {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, { 
-        completed: !completed, 
-        //title 
-      });
-  
-      // Cập nhật lại danh sách task với dữ liệu từ server
-      setTasks(tasks.map((task) => 
-        task.id === id ? response.data : task
-      ));
+      const response = await axios.put(`${API_URL}/${id}`, { completed: !completed });
+      setTasks(tasks.map((task) => (task.id === id ? response.data : task)));
     } catch (error) {
       console.error("Lỗi khi cập nhật công việc:", error);
     }
   };
-  
 
-  // Xóa công việc
+  // Delete Task
   const deleteTask = async (id) => {
     const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa công việc này không?");
-    if (!isConfirmed) return; // Nếu người dùng không đồng ý thì dừng lại
-
+    if (!isConfirmed) return; 
     try {
       await axios.delete(`${API_URL}/${id}`);
-      
-      // Gọi lại API để đảm bảo dữ liệu đồng bộ với backend
-      fetchTasks();
+      fetchTasks(); // Gọi lại API để cập nhật danh sách
     } catch (error) {
       console.error("Lỗi khi xóa công việc:", error);
     }
   };
 
-  
-
   return (
-    <div className="container">
-      <h1>📌 Quản lý Công việc</h1>
+    <>
+      <Header />
+      <div className="container">
+        <h1>📌 Quản lý Công việc</h1>
 
-      {/* Form thêm công việc */}
-      <div className="add-task">
-        <input
-          type="text"
-          placeholder="Tiêu đề công việc"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+        <TaskForm 
+          addTask={addTask} 
+          title={title} 
+          setTitle={setTitle} 
+          description={description} 
+          setDescription={setDescription} 
         />
-        <input
-          type="text"
-          placeholder="Mô tả công việc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button onClick={addTask}>➕ Thêm</button>
+
+
       </div>
-
-      {/* Danh sách công việc */}
-      <ul className="task-list">
-        {tasks.length === 0 ? (
-          <p>Chưa có công việc nào! ✨</p>
-        ) : (
-          tasks.map((task) => (
-            <li key={task.id} className={task.completed ? "completed" : ""}>
-              <span onClick={() => toggleTaskCompletion(task.id, task.completed)}>
-                {task.completed ? "✅" : "⬜"} {task.title}
-              </span>
-              <button className="delete" onClick={() => deleteTask(task.id)}>❌</button>
-            </li>
-          ))
-        )}
-      </ul>
-    </div>
-  );
+      <TaskList 
+          tasks={tasks} 
+          toggleTaskCompletion={toggleTaskCompletion} 
+          deleteTask={deleteTask} 
+        />
+    </>
+  ); 
 }
 
 export default App;
