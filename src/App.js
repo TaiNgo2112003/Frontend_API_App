@@ -5,7 +5,7 @@ import Header from "./components/Header/Header";
 import TaskList from "./components/Container/TaskList"; 
 import TaskForm from "./components/Container/TaskForm"; 
 
-const API_URL = "http://localhost:8080/tasks";
+const API_URL = "https://backendapiapp-production.up.railway.app/tasks";
 
 function App() {
   const [tasks, setTasks] = useState([]);
